@@ -4,49 +4,65 @@ using UnityEngine;
 
 public class ProjectileController : MonoBehaviour {
 
+    [SerializeField] private Transform firePoint;
+
     private const float initSpeed = 10f;
     private float initAngle = 45f;
 
-    private float projectileLifeTime = 10;
+    private float projectileLifeTime = 5;
     private float currentLifeTime;
 
-    private void Start() {
+    private Vector2 startPos;
+
+    private void Awake() {
         currentLifeTime = 0;
         initAngle *= Mathf.Deg2Rad;
 
-        ProjectileMovementHandler(initSpeed, initAngle);
+        MovementHandler(initSpeed, initAngle);
 
         Physics.gravity.Set(1f,1f,1f);
+
+        startPos = transform.position;
+
+        Debug.Log(startPos);
     }
 
 
     private void Update() {
-        ProjectileMovementHandler(initSpeed, initAngle);
 
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            currentLifeTime = 0;
+        }
+
+        MovementHandler(initSpeed, initAngle);
     }
 
-    private void ProjectileMovementHandler(float initSpeed, float initAngle) {
+    private void MovementHandler(float initSpeed, float initAngle) {
+
         if (currentLifeTime < projectileLifeTime) {
             float x = initSpeed * currentLifeTime * Mathf.Cos(initAngle);
-            float y = initSpeed * currentLifeTime * Mathf.Sin(initAngle) 
-                - -Physics.gravity.y * Mathf.Pow(currentLifeTime, 2) / 2;
+            float y = initSpeed * currentLifeTime * Mathf.Sin(initAngle)
+                + Physics.gravity.y * Mathf.Pow(currentLifeTime, 2) / 2;
 
-            transform.position = new Vector3(x, y, 0); 
+            transform.position = firePoint.position + new Vector3(x, y, 0); 
 
             currentLifeTime += Time.deltaTime;
         }
     }
-
 }
 
 // A - угол запуска снаряда
-// x = Vx * t, где x - расстояние пройденное по горизонтали,
-// Vx - горизонтальная скорость, t - время
-// y = h + (Vy * t) - (g * t^2) / 2, где y - пройденное вертикальное расстояние, h - начальная высота
-// В данном случае горизонтальное ускорение отсутствует, а вертикальное равно g
+// x - расстояние пройденное по горизонтали, y - по вертикали,
+// Vx - горизонтальная скорость, Vy - вертикальная, t - прошедшее время, h - начальная высота
+// g - ускорение свободного падения
+// Формула снижения снаряда g * t^2 / 2
+// Ускорение свободного падения g = Physics.gravity.y
+// x = Vx * t
+// y = h + (Vy * t) - (g * t^2) / 2
+// 
+// В тетрадке полные рассчёты с графиком
+//
 
 // x = v0 * t * cosA
 // y = v0 * t * sinA - (g * t) / 2
-
-
-//Либо просто задать y уравнением параболы y = ax^2 + bx + c, но как тогда
+// 
