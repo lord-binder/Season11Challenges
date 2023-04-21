@@ -2,29 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteInEditMode]
 public class ProjectileControllerTest : MonoBehaviour {
 
     [SerializeField] LineRenderer _Line;
     [SerializeField] private Transform _FirePoint;
     [SerializeField] private Camera _cam;
 
-    [SerializeField] float _InitialVelocity;
-    [SerializeField] float _Angle;
-    [SerializeField] float _Step;
+    [SerializeField] private float _InitialVelocity;
+    [SerializeField] private float _Angle;
+    [SerializeField] private float _Step;
+    [SerializeField] private float _Height;
 
     private void Start() {
         _cam = Camera.main;
     }
 
     private void Update() {
-        float angle = _Angle * Mathf.Deg2Rad;
+        
         Vector3 targetPos = _cam.ScreenToWorldPoint(Input.mousePosition) - _FirePoint.position;
 
+        float angle;
         float v0;
         float time;
 
-        CalculatePath(targetPos, angle, out v0, out time);
+        CalculatePathWithHeight(targetPos, _Height, out v0, out angle, out time);
 
         DrawPath(v0, angle, _Step, time);
         if (Input.GetKeyDown(KeyCode.Space)) {
@@ -33,12 +34,33 @@ public class ProjectileControllerTest : MonoBehaviour {
         }
     }
 
+    private float QuadraticEquation(float a, float b, float c, float sign) {
+        return (-b + sign * Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
+    }
+
+    private void CalculatePathWithHeight(Vector3 targetPos, float h, out float v0, out float angle, out float time) {
+        float x = targetPos.x;
+        float y = targetPos.y;
+        float g = -Physics.gravity.y;
+
+        float a = (-0.5f * g);
+        float b = Mathf.Sqrt(2 * g * h);
+        float c = -y;
+
+        float tplus = QuadraticEquation(a, b, c, 1);
+        float tmin = QuadraticEquation(a, b, c, -1);
+
+        time = tplus > tmin ? tplus : tmin;
+        angle = Mathf.Atan(b * time / x);
+        v0 = b / Mathf.Sin(angle);
+    }
+
     private void DrawPath(float v0, float angle, float step, float time) {
         step = Mathf.Max(0.01f, step);
 
         int count = 0;
 
-        _Line.positionCount = (int)(time / step) + 1;
+        _Line.positionCount = (int)(time / step) + 2;
 
         for (float i =0; i < time; i += step) { 
             float x = v0 * i * Mathf.Cos(angle);

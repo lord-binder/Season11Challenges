@@ -7,11 +7,13 @@ public class ProjectileController : MonoBehaviour {
 
     [SerializeField] private Transform firePoint;
     [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private float lineStep;
+    [SerializeField] private float lineStep = 0.2f;
 
     private float initSpeed = 10f;
     private float initAngle = 45f;
+    private float initTime = 2f;
     private float projectileLifeTime = 5f;
+    private float maxHeight = 5f;
 
     private Camera cameraMain;
 
@@ -31,23 +33,30 @@ public class ProjectileController : MonoBehaviour {
 
     private void FixedUpdate() {
 
-        float initAngleRad = initAngle * Mathf.Deg2Rad;
         Vector3 targetPos = cameraMain.ScreenToWorldPoint(Input.mousePosition) - startPos;
+        targetPos.z = 0;
+
+        float maxHeight = targetPos.y + targetPos.magnitude / 2f;
+        maxHeight = Mathf.Max(0.01f, maxHeight);
 
         float v0;
         float time;
+        float angle;
 
-        CalculatePath(targetPos, initAngleRad, out v0, out time);
+        CalculatePathWithHeight(targetPos, maxHeight, out v0, out angle, out time);
 
-        DrawPath(v0, initAngleRad, lineStep, time);
-        
+        DrawPath(v0, angle, lineStep, time);
+
         if (Input.GetKeyDown(KeyCode.Space)) {
             currentLifeTime = 0;
+            initSpeed = v0;
+            initAngle = angle;
+            initTime = time;
             isOnFlight = true;
         }
 
         if (isOnFlight) {
-            MovementHandler(v0, initAngleRad, time);
+            MovementHandler(initSpeed, initAngle, initTime);
         }
 
     }
@@ -65,7 +74,7 @@ public class ProjectileController : MonoBehaviour {
         time = x / (v0 * Mathf.Cos(initAngle));
     }
 
-    private void DrawPath(float initSpeed, float angleRad, float lineStep, float time) {
+    private void DrawPath(float speed, float angle, float lineStep, float time) {
         int count = 0;
 
         lineStep = Mathf.Max(0.01f, lineStep);
@@ -73,16 +82,16 @@ public class ProjectileController : MonoBehaviour {
         
         for(float predictTime = 0; predictTime < time; predictTime+= lineStep) {
 
-            lineRenderer.SetPosition(count, startPos + CalculatePosition(initSpeed, angleRad, predictTime));
+            lineRenderer.SetPosition(count, startPos + CalculatePosition(speed, angle, predictTime));
 
             count++;
         }
 
-        lineRenderer.SetPosition(count, startPos + CalculatePosition(initSpeed, angleRad, time));
+        lineRenderer.SetPosition(count, startPos + CalculatePosition(speed, angle, time));
     }
 
     private float QuadraticEquation(float a, float b, float c, float sigh) {
-        return (-b + sigh * Mathf.Sqrt(b * b - 4 * a * c) / (2 * a));
+        return (-b + sigh * Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
     }
 
     private void CalculatePathWithHeight(Vector3 targetPos, float h, out float v0, out float angle, out float time) {
@@ -95,26 +104,24 @@ public class ProjectileController : MonoBehaviour {
         float c = -y;
 
         float tplus = QuadraticEquation(a, b, c, 1);
-        float tmin = QuadraticEquation(-a, b, c, -1);
+        float tmin = QuadraticEquation(a, b, c, -1);
 
         time = tplus > tmin ? tplus : tmin;
         angle = Mathf.Atan(b * time / x);
         v0 = b / Mathf.Sin(angle);
     }
 
-    private void MovementHandler(float initSpeed, float angleRad, float lifeTime) {
+    private void MovementHandler(float speed, float angle, float lifeTime) {
         if (currentLifeTime < lifeTime) {
-            transform.position = startPos + CalculatePosition(initSpeed, angleRad, currentLifeTime);
+            transform.position = startPos + CalculatePosition(speed, angle, currentLifeTime);
             currentLifeTime += Time.fixedDeltaTime;
         }
     }
     
-    public Vector3 CalculatePosition(float initSpeed, float angleRad, float time) {
-        float x = initSpeed * time * Mathf.Cos(angleRad);
-        float y = initSpeed * time * Mathf.Sin(angleRad)
+    public Vector3 CalculatePosition(float speed, float angle, float time) {
+        float x = speed * time * Mathf.Cos(angle);
+        float y = speed * time * Mathf.Sin(angle)
             + Physics.gravity.y * Mathf.Pow(time, 2) / 2;
-
-        Debug.Log(initSpeed);
 
         return new Vector3(x, y, 0);
     }
