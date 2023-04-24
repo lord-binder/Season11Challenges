@@ -8,6 +8,7 @@ public class ProjectileController3D : MonoBehaviour {
     [SerializeField] private Transform firePoint;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private float lineStep = 0.2f;
+    [SerializeField] private ParticleSystem explosionEffect;
 
     private Vector3 initDirection;
     private float initSpeed = 10f;
@@ -55,7 +56,7 @@ public class ProjectileController3D : MonoBehaviour {
 
             DrawPath(groundDirection.normalized, v0, angle, lineStep, time);
 
-            if (Input.GetKeyDown(KeyCode.Space)) {
+            if (Input.GetKeyDown(KeyCode.Space) && !isOnFlight) {
                 currentLifeTime = 0;
                 initSpeed = v0;
                 initAngle = angle;
@@ -126,6 +127,10 @@ public class ProjectileController3D : MonoBehaviour {
         if (currentLifeTime < lifeTime) {
             transform.position = startPos + CalculatePosition(direction, speed, angle, currentLifeTime);
             currentLifeTime += Time.fixedDeltaTime;
+        } else {
+            isOnFlight = false;
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+            transform.position = startPos;
         }
     }
     

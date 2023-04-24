@@ -8,6 +8,8 @@ public class ProjectileController : MonoBehaviour {
     [SerializeField] private Transform firePoint;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private float lineStep = 0.2f;
+    [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private ParticleSystem explosionEffect;
 
     private float initSpeed = 10f;
     private float initAngle = 45f;
@@ -34,20 +36,20 @@ public class ProjectileController : MonoBehaviour {
     private void FixedUpdate() {
 
         Vector3 targetPos = cameraMain.ScreenToWorldPoint(Input.mousePosition) - startPos;
-        targetPos.z = 0;
-
-        float maxHeight = targetPos.y + targetPos.magnitude / 2f;
-        maxHeight = Mathf.Max(0.01f, maxHeight);
 
         float v0;
         float time;
         float angle;
+        float maxHeight = targetPos.y + targetPos.magnitude / 2f;
+
+        targetPos.z = 0;
+        maxHeight = Mathf.Max(0.01f, maxHeight);
 
         CalculatePathWithHeight(targetPos, maxHeight, out v0, out angle, out time);
 
         DrawPath(v0, angle, lineStep, time);
 
-        if (Input.GetKeyDown(KeyCode.Space)) {
+        if (Input.GetKeyDown(KeyCode.Space) && !isOnFlight) {
             currentLifeTime = 0;
             initSpeed = v0;
             initAngle = angle;
@@ -115,6 +117,10 @@ public class ProjectileController : MonoBehaviour {
         if (currentLifeTime < lifeTime) {
             transform.position = startPos + CalculatePosition(speed, angle, currentLifeTime);
             currentLifeTime += Time.fixedDeltaTime;
+        } else {
+            isOnFlight = false;
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+            transform.position = startPos;
         }
     }
     

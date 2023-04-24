@@ -660,6 +660,8 @@ MonoBehaviour:
   firePoint: {fileID: 1617215232}
   lineRenderer: {fileID: 1066893788}
   lineStep: 0.2
+  explosionEffect: {fileID: 4495957934713092113, guid: 5c79a3c9a29b17b4ea845b5a0e601880,
+    type: 3}
 --- !u!1 &1066893787
 GameObject:
   m_ObjectHideFlags: 0
