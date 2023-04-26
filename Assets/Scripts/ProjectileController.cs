@@ -14,8 +14,6 @@ public class ProjectileController : MonoBehaviour {
     private float initSpeed = 10f;
     private float initAngle = 45f;
     private float initTime = 2f;
-    private float projectileLifeTime = 5f;
-    private float maxHeight = 5f;
 
     private Camera cameraMain;
 
