@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class ProjectileController3D : MonoBehaviour {
 
@@ -29,6 +30,13 @@ public class ProjectileController3D : MonoBehaviour {
 
     private void Start() {
         cameraMain = Camera.main;
+        isOnFlight = false;
+    }
+
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Mouse0) && !isOnFlight) {
+            isOnFlight = true;
+        }
     }
 
     private void FixedUpdate() {
@@ -54,12 +62,11 @@ public class ProjectileController3D : MonoBehaviour {
 
             DrawPath(groundDirection.normalized, v0, angle, lineStep, time);
 
-            if (Input.GetKeyDown(KeyCode.Space) && !isOnFlight) {
+            if (!isOnFlight) {
                 currentLifeTime = 0;
                 initSpeed = v0;
                 initAngle = angle;
                 initTime = time;
-                isOnFlight = true;
                 initDirection = groundDirection.normalized;
             }
         }
